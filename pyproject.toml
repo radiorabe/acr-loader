@@ -15,7 +15,7 @@ python = "^3.11"
 acrclient = "^0.4.0"
 configargparse = "^1.5.3"
 pyocclient = "^0.6"
-requests = "<2.30" # https://github.com/urllib3/urllib3/issues/3010
+requests = "<2.31" # https://github.com/urllib3/urllib3/issues/3010
 tqdm = "^4.65.0"
 
 [tool.poetry.group.dev.dependencies]
