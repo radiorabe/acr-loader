@@ -2,3 +2,4 @@ venv
 acrloader.conf
 .coverage
 __pycache__/
+trivy-results.sarif
