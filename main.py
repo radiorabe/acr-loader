@@ -52,7 +52,7 @@ def check(oc: OwnCloudClient, oc_path: str) -> list[datetime]:
     Checks ownCloud for missing files.
     """
     missing = []
-    start = datetime(2023, 1, 1)
+    start = datetime.now() - timedelta(7)
     for requested in tqdm(daterange(start, datetime.now()), desc="Checking ownCloud"):
         oc_mkdir(oc, oc_path)
         oc_mkdir(oc, os.path.join(oc_path, str(requested.year)))
@@ -163,7 +163,7 @@ def main():  # pragma: no cover
     # figure out what we are missing on ownCloud
     oc = OwnCloudClient(options.oc_url)
     oc.login(options.oc_user, options.oc_pass)
-    missing = check(oc=oc, start=datetime(2023, 1, 1), oc_path=options.oc_path)
+    missing = check(oc=oc, oc_path=options.oc_path)
 
     # return early if no files are missing
     if not missing:
