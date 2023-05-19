@@ -3,4 +3,7 @@ name: acrloader
 description: RaBe ACR Loader
 type: application
 version: 0.0.0
-appVersion: "0.0.0"
+appVersion: "latest"
+maintainers:
+  - name: radiorabe
+    url: https://github.com/radiorabe
