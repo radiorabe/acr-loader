@@ -1,0 +1,59 @@
+name: Test
+
+on:
+  pull_request:
+
+jobs:
+  pre-commit:
+    uses: radiorabe/actions/.github/workflows/test-pre-commit.yaml@v0.10.0
+  python-poetry:
+    uses: radiorabe/actions/.github/workflows/test-python-poetry.yaml@v0.10.0
+    with:
+      version: '3.11'
+  helm-chart:
+    name: Test Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Build dev image
+        run: |
+          docker build -t ghcr.io/radiorabe/acrloader:latest -f Dockerfile .
+          docker save -o /tmp/acrloader.tar ghcr.io/radiorabe/acrloader:latest
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3.5
+        with:
+          version: v3.12.0
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install chart-testing
+        uses: helm/chart-testing-action@v2.3.1
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct --config=.github/ct.yaml list-changed)
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run chart-testing (lint)
+        run: ct --config=.github/ct.yaml lint
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.5.0
+        if: steps.list-changed.outputs.changed == 'true'
+
+      - name: Load dev image
+        run: |
+          kind load image-archive /tmp/acrloader.tar --name chart-testing
+        if: steps.list-changed.outputs.changed == 'true'
+
+      - name: Run chart-testing (install)
+        run: ct --config=.github/ct.yaml install

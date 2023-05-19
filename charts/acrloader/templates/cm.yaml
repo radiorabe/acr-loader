@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "acrloader.fullname" . }}
+  labels:
+    {{- include "acrloader.labels" . | nindent 4 }}
+data:
+  ACR_PROJECT_ID: {{ .Values.acr.projectId | quote }}
+  ACR_STREAM_ID: {{ .Values.acr.streamId | quote }}
+  OC_URL: {{ .Values.oc.url | quote }}
+  OC_USER: {{ .Values.oc.user | quote }}
+  OC_PATH: {{ .Values.oc.path | quote }}

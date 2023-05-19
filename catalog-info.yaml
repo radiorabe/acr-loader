@@ -1,0 +1,13 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: acr-loader
+  description: Loads data from ACRCloud's broadcast monitoring and stores it in ownCloud.
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    github.com/project-slug: radiorabe/acr-loader
+spec:
+  type: service
+  lifecycle: experimental
+  owner: it-reaktion

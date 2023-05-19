@@ -1,0 +1,12 @@
+# ACRCloud Bearer token
+acrcloud-bearer-token=
+# ACRCloud project id
+acr-project-id=
+# ACRCloud stream id
+acr-stream-id=
+# owncloud URL
+oc-url=
+# ownCloud user
+oc-user=
+# ownCloud pass
+oc-pass=
