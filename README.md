@@ -1,8 +1,8 @@
 # ACR Loader
 
 Loads data from ACRCloud's broadcat monitoring service and stores it
-in our ownCloud instance. Runs as a cronjob and is scheduled to run
-once per day.
+in our ownCloud instance and/or MinIO service. Runs as a cronjob and
+is scheduled to run once per day.
 
 ## Usage
 
@@ -10,7 +10,10 @@ once per day.
 helm install my-acrloader oci://ghcr.io/radiorabe/helm/acrloader \
   --version x.y.z \
   --set acr.bearerToken=<token>,acr.projectId=<pid>,streamId=<sid> \
-  --set oc.url=<url>,oc.user=<user>,oc.pass=<pass>,oc.path=<path>
+  --set oc.enabled=true \
+  --set oc.url=<url>,oc.user=<user>,oc.pass=<pass>,oc.path=<path> \
+  --set minio.enabled=true \
+  --set minio.url=<url>,minio.access_key=<key>,minio.secret_key=<secret>
 ```
 
 ## Development

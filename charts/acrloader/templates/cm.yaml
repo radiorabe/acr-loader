@@ -7,6 +7,19 @@ metadata:
 data:
   ACR_PROJECT_ID: {{ .Values.acr.projectId | quote }}
   ACR_STREAM_ID: {{ .Values.acr.streamId | quote }}
+  {{- if .Values.oc.enabled }}
+  OC: "true"
   OC_URL: {{ .Values.oc.url | quote }}
   OC_USER: {{ .Values.oc.user | quote }}
   OC_PATH: {{ .Values.oc.path | quote }}
+  {{- end }}
+  {{- if .Values.minio.enabled }}
+  MINIO: "true"
+  MINIO_URL: {{ .Values.minio.url | quote }}
+  MINIO_BUCKET: {{ .Values.minio.bucket | quote }}
+  MINIO_SECURE: {{ .Values.minio.secure | quote }}
+  MINIO_CERT_REQS: {{ .Values.minio.cert_reqs | quote }}
+  {{- with .Values.minio.ca_certs }}
+  MINIO_CA_CERTS: {{ . | quote }}
+  {{- end }}
+  {{- end }}

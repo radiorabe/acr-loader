@@ -64,7 +64,18 @@ acr:
   streamId: ""
 
 oc:
+  enabled: true
   url: ""
   user: ""
   pass: ""
   path: ""
+
+minio:
+  enabled: true
+  url: ""
+  bucket: ""
+  access_key: ""
+  secret_key: ""
+  secure: "True"
+  cert_reqs: "CERT_REQUIRED"
+  ca_certs: ""

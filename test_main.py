@@ -1,19 +1,20 @@
 from datetime import datetime
+from unittest.mock import ANY, call, patch
 
-from unittest.mock import patch, call
-from pytest import mark
+from minio.error import S3Error  # type: ignore
 
 # from owncloud import Client as OwnCloudClient
 from owncloud.owncloud import HTTPResponseError as OCResponseError  # type: ignore
+from pytest import mark
 
 import main
 
 
 @mark.freeze_time("2023-01-08")
 @patch("owncloud.Client")
-def test_check_files_exist(oc_client):
+def test_oc_check_files_exist(oc_client):
     oc = oc_client()
-    missing = main.check(oc=oc, oc_path="/tmp/test")
+    missing = main.oc_check(oc=oc, oc_path="/tmp/test")
     assert oc_client.called
     mkdir_calls = [
         call("/tmp/test"),
@@ -30,12 +31,12 @@ def test_check_files_exist(oc_client):
 
 @mark.freeze_time("2023-01-08")
 @patch("owncloud.Client")
-def test_check_files_missing(oc_client):
+def test_oc_check_files_missing(oc_client):
     oc = oc_client()
     oc.file_info.side_effect = OCResponseError(
         type("", (object,), {"status_code": 404})()
     )
-    missing = main.check(oc=oc, oc_path="/tmp/test")
+    missing = main.oc_check(oc=oc, oc_path="/tmp/test")
     oc.file_info.assert_has_calls(
         [call(f"/tmp/test/2023/1/2023-01-0{x}.json") for x in range(1, 8)]
     )
@@ -45,13 +46,13 @@ def test_check_files_missing(oc_client):
 @mark.freeze_time("2023-01-08")
 @patch("acrclient.Client")
 @patch("owncloud.Client")
-def test_fetch(oc_client, acr_client):
+def test_oc_fetch(oc_client, acr_client):
     oc = oc_client()
     acr = acr_client()
 
     acr.get_bm_cs_projects_results.return_value = "JSON"
 
-    main.fetch(
+    main.oc_fetch(
         [datetime(2023, 1, 1)],
         acr=acr,
         oc=oc,
@@ -61,4 +62,62 @@ def test_fetch(oc_client, acr_client):
     )
     oc.put_file_contents.assert_called_with(
         "/tmp/test/2023/1/2023-01-01.json", '"JSON"'
+    )
+
+
+@mark.freeze_time("2023-01-08")
+@patch("minio.Minio")
+def test_mc_check_files_exist(mc_client):
+    mc = mc_client()
+    missing = main.mc_check(mc=mc, bucket="acrcloud.raw")
+    assert mc_client.called
+    mc.stat_object.assert_has_calls(
+        [call("acrcloud.raw", f"2023-01-0{x}.json") for x in range(1, 8)]
+    )
+    assert missing == []
+
+
+@mark.freeze_time("2023-01-08")
+@patch("minio.Minio")
+def test_mc_check_files_missing(mc_client):
+    mc = mc_client()
+    mc.stat_object.side_effect = S3Error(
+        code="NoSuchKey",
+        message="",
+        resource=None,
+        request_id=None,
+        host_id=None,
+        response=None,
+    )
+    missing = main.mc_check(mc=mc, bucket="acrcloud.raw")
+    assert mc_client.called
+    mc.stat_object.assert_has_calls(
+        [call("acrcloud.raw", f"2023-01-0{x}.json") for x in range(1, 8)]
+    )
+    assert len(missing) == 7
+
+
+@mark.freeze_time("2023-01-08")
+@patch("acrclient.Client")
+@patch("minio.Minio")
+def test_mc_fetch(mc_client, acr_client):
+    mc = mc_client()
+    acr = acr_client()
+
+    acr.get_bm_cs_projects_results.return_value = "JSON"
+
+    main.mc_fetch(
+        [datetime(2023, 1, 1)],
+        acr=acr,
+        mc=mc,
+        acr_project_id=1,
+        acr_stream_id="asdf",
+        bucket="acrcloud.raw",
+    )
+    mc.put_object.assert_called_with(
+        "acrcloud.raw",
+        "2023-01-01.json",
+        ANY,
+        length=6,
+        content_type="application/json",
     )
