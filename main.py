@@ -233,8 +233,8 @@ def main():  # pragma: no cover
         "--minio",
         default=False,
         action="store_true",
-        env_var="MINIO_URL",
-        help="MinIO URL",
+        env_var="MINIO_ENABLE",
+        help="Enable MinIO",
     )
     p.add(
         "--minio-url",
@@ -327,7 +327,7 @@ def main():  # pragma: no cover
             mc=mc,
             acr_project_id=options.acr_project_id,
             acr_stream_id=options.acr_stream_id,
-            bucket=options.bucket,
+            bucket=options.minio_bucket,
         )
 
 
