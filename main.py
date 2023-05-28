@@ -1,19 +1,22 @@
 """
 Stores daily data from ACRCloud's broadcast monitoring service in ownCloud.
 """
-from datetime import datetime, timedelta
-from logging import getLogger
-from functools import cache
-import os
 import json
+import os
+from datetime import datetime, timedelta
+from functools import cache
+from io import BytesIO
+from logging import getLogger
 
+import urllib3
 from acrclient import Client as ACRClient
 from acrclient.models import GetBmCsProjectsResultsParams
 from configargparse import ArgParser  # type: ignore
+from minio import Minio  # type: ignore
+from minio.error import S3Error  # type: ignore
 from owncloud import Client as OwnCloudClient  # type: ignore
 from owncloud.owncloud import HTTPResponseError as OCResponseError  # type: ignore
 from tqdm import tqdm
-
 
 logger = getLogger(__name__)
 
@@ -47,7 +50,7 @@ def oc_file_exists(oc: OwnCloudClient, path: str):
         return False
 
 
-def check(oc: OwnCloudClient, oc_path: str) -> list[datetime]:
+def oc_check(oc: OwnCloudClient, oc_path: str) -> list[datetime]:
     """
     Checks ownCloud for missing files.
     """
@@ -71,7 +74,42 @@ def check(oc: OwnCloudClient, oc_path: str) -> list[datetime]:
     return missing
 
 
-def fetch(
+def mc_check(mc: Minio, bucket: str) -> list[datetime]:
+    """
+    Checks MinIO for missing files.
+    """
+    missing = []
+    start = datetime.now() - timedelta(7)
+    for requested in tqdm(daterange(start, datetime.now()), desc="Checking MinIO"):
+        try:
+            mc.stat_object(bucket, requested.strftime("%Y-%m-%d.json"))
+        except S3Error as ex:
+            if ex.code == "NoSuchKey":
+                missing.append(requested)
+    return missing
+
+
+@cache
+def fetch_one(
+    acr: ACRClient,
+    acr_project_id: str,
+    acr_stream_id: str,
+    requested: str,
+):
+    return acr.get_bm_cs_projects_results(
+        project_id=int(acr_project_id),
+        stream_id=acr_stream_id,
+        params=GetBmCsProjectsResultsParams(
+            type="day",
+            date=requested,
+            min_duration=0,
+            max_duration=3600,
+            isrc_country="",
+        ),
+    )
+
+
+def oc_fetch(
     missing: list[datetime],
     acr: ACRClient,
     oc: OwnCloudClient,
@@ -79,26 +117,52 @@ def fetch(
     acr_stream_id: str,
     oc_path: str,
 ):
-    """Fetches missing data from ACRCloud and stores it."""
-    for requested in tqdm(missing, desc="Loading from ACRCloud"):
+    """Fetches missing data from ACRCloud and stores it in ownCloud."""
+    for requested in tqdm(missing, desc="Loading into ownCloud from ACRCloud"):
         target = os.path.join(
             oc_path,
             str(requested.year),
             str(requested.month),
             requested.strftime("%Y-%m-%d.json"),
         )
-        data = acr.get_bm_cs_projects_results(
-            project_id=int(acr_project_id),
-            stream_id=acr_stream_id,
-            params=GetBmCsProjectsResultsParams(
-                type="day",
-                date=requested.strftime("%Y%m%d"),
-                min_duration=0,
-                max_duration=3600,
-                isrc_country="",
+        oc.put_file_contents(
+            target,
+            json.dumps(
+                fetch_one(
+                    acr=acr,
+                    acr_project_id=acr_project_id,
+                    acr_stream_id=acr_stream_id,
+                    requested=requested.strftime("%Y%m%d"),
+                )
             ),
         )
-        oc.put_file_contents(target, json.dumps(data))
+
+
+def mc_fetch(
+    missing: list[datetime],
+    acr: ACRClient,
+    mc: Minio,
+    acr_project_id: str,
+    acr_stream_id: str,
+    bucket: str,
+):
+    """Fetches missing data from ACRCloud and stores it in MinIO."""
+    for requested in tqdm(missing, desc="Loading into MinIO from ACRCloud"):
+        _as_bytes = json.dumps(
+            fetch_one(
+                acr=acr,
+                acr_project_id=acr_project_id,
+                acr_stream_id=acr_stream_id,
+                requested=requested.strftime("%Y%m%d"),
+            )
+        ).encode("utf-8")
+        mc.put_object(
+            bucket,
+            requested.strftime("%Y-%m-%d.json"),
+            BytesIO(_as_bytes),
+            length=len(_as_bytes),
+            content_type="application/json",
+        )
 
 
 def main():  # pragma: no cover
@@ -135,6 +199,13 @@ def main():  # pragma: no cover
         help="ACRCloud stream id",
     )
     p.add(
+        "--oc",
+        default=False,
+        action="store_true",
+        env_var="OC_ENABLE",
+        help="Enable ownCloud",
+    )
+    p.add(
         "--oc-url",
         default="https://share.rabe.ch",
         env_var="OC_URL",
@@ -158,29 +229,106 @@ def main():  # pragma: no cover
         env_var="OC_PATH",
         help="ownCloud path",
     )
+    p.add(
+        "--minio",
+        default=False,
+        action="store_true",
+        env_var="MINIO_URL",
+        help="MinIO URL",
+    )
+    p.add(
+        "--minio-url",
+        default="minio.service.int.rabe.ch:9000",
+        env_var="MINIO_HOST",
+        help="MinIO Hostname",
+    )
+    p.add(
+        "--minio-secure",
+        default=True,
+        env_var="MINIO_SECURE",
+        help="MinIO Secure param",
+    )
+    p.add(
+        "--minio-cert-reqs",
+        default="CERT_REQUIRED",
+        env_var="MINIO_CERT_REQS",
+        help="cert_reqs for urlib3.PoolManager used by MinIO",
+    )
+    p.add(
+        "--minio-ca-certs",
+        default="/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt",
+        env_var="MINIO_CA_CERTS",
+        help="ca_certs for urlib3.PoolManager used by MinIO",
+    )
+    p.add(
+        "--minio-bucket",
+        default="acrcloud.raw",
+        env_var="MINIO_BUCKET",
+        help="MinIO Bucket Name",
+    )
+    p.add(
+        "--minio-access-key",
+        default=None,
+        env_var="MINIO_ACCESS_KEY",
+        help="MinIO Access Key",
+    )
+    p.add(
+        "--minio-secret-key",
+        default=None,
+        env_var="MINIO_SECRET_KEY",
+        help="MinIO Secret Key",
+    )
     options = p.parse_args()
-
-    # figure out what we are missing on ownCloud
-    oc = OwnCloudClient(options.oc_url)
-    oc.login(options.oc_user, options.oc_pass)
-    missing = check(oc=oc, oc_path=options.oc_path)
-
-    # return early if no files are missing
-    if not missing:
-        return
-
-    # fetch and store missing data
     acr_client = ACRClient(
         bearer_token=options.acr_bearer_token,
     )
-    fetch(
-        missing,
-        acr=acr_client,
-        oc=oc,
-        acr_project_id=options.acr_project_id,
-        acr_stream_id=options.acr_stream_id,
-        oc_path=options.oc_path,
-    )
+
+    if options.oc:
+        # figure out what we are missing on ownCloud
+        oc = OwnCloudClient(options.oc_url)
+        oc.login(options.oc_user, options.oc_pass)
+        missing = oc_check(oc=oc, oc_path=options.oc_path)
+
+        # return early if no files are missing
+        if not missing:
+            return
+
+        # fetch and store missing data
+        oc_fetch(
+            missing,
+            acr=acr_client,
+            oc=oc,
+            acr_project_id=options.acr_project_id,
+            acr_stream_id=options.acr_stream_id,
+            oc_path=options.oc_path,
+        )
+    if options.minio:
+        mc = Minio(
+            options.minio_url,
+            options.minio_access_key,
+            options.minio_secret_key,
+            secure=options.minio_secure,
+            http_client=urllib3.PoolManager(
+                cert_reqs=options.minio_cert_reqs, ca_certs=options.minio_ca_certs
+            ),
+        )
+        if not mc.bucket_exists(options.minio_bucket):
+            mc.make_bucket(options.minio_bucket)
+        missing = mc_check(mc=mc, bucket=options.minio_bucket)
+
+        # return early if no files are missing
+        if not missing:
+            return
+
+        # fetch and store missing data
+        mc_fetch(
+            missing,
+            acr=acr_client,
+            mc=mc,
+            acr_project_id=options.acr_project_id,
+            acr_stream_id=options.acr_stream_id,
+            bucket=options.bucket,
+        )
 
 
 if __name__ == "__main__":  # pragma: no cover

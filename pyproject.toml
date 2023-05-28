@@ -17,6 +17,7 @@ configargparse = "^1.5.3"
 pyocclient = "^0.6"
 requests = "<2.30" # https://github.com/urllib3/urllib3/issues/3010
 tqdm = "^4.65.0"
+minio = "^7.1.15"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
@@ -38,6 +39,7 @@ mkdocs-gen-files = "^0.5.0"
 mkdocs-literate-nav = "^0.6.0"
 mkdocs-section-index = "^0.3.5"
 pre-commit = "^3.3.2"
+types-urllib3 = "^1.26.25.13"
 
 [tool.pytest.ini_options]
 minversion = "7.2"
