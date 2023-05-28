@@ -30,7 +30,6 @@ def daterange(start_date, end_date) -> list[datetime]:
 
 @cache
 def oc_mkdir(oc: OwnCloudClient, path: str) -> bool:
-    print(path)
     try:
         return oc.mkdir(path)
     except OCResponseError as ex:  # pragma: no cover
@@ -289,19 +288,17 @@ def main():  # pragma: no cover
         oc.login(options.oc_user, options.oc_pass)
         missing = oc_check(oc=oc, oc_path=options.oc_path)
 
-        # return early if no files are missing
-        if not missing:
-            return
+        if missing:
+            # fetch and store missing data
+            oc_fetch(
+                missing,
+                acr=acr_client,
+                oc=oc,
+                acr_project_id=options.acr_project_id,
+                acr_stream_id=options.acr_stream_id,
+                oc_path=options.oc_path,
+            )
 
-        # fetch and store missing data
-        oc_fetch(
-            missing,
-            acr=acr_client,
-            oc=oc,
-            acr_project_id=options.acr_project_id,
-            acr_stream_id=options.acr_stream_id,
-            oc_path=options.oc_path,
-        )
     if options.minio:
         mc = Minio(
             options.minio_url,
@@ -316,19 +313,16 @@ def main():  # pragma: no cover
             mc.make_bucket(options.minio_bucket)
         missing = mc_check(mc=mc, bucket=options.minio_bucket)
 
-        # return early if no files are missing
-        if not missing:
-            return
-
-        # fetch and store missing data
-        mc_fetch(
-            missing,
-            acr=acr_client,
-            mc=mc,
-            acr_project_id=options.acr_project_id,
-            acr_stream_id=options.acr_stream_id,
-            bucket=options.minio_bucket,
-        )
+        if missing:
+            # fetch and store missing data
+            mc_fetch(
+                missing,
+                acr=acr_client,
+                mc=mc,
+                acr_project_id=options.acr_project_id,
+                acr_stream_id=options.acr_stream_id,
+                bucket=options.minio_bucket,
+            )
 
 
 if __name__ == "__main__":  # pragma: no cover
