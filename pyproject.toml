@@ -18,7 +18,7 @@ pyocclient = "^0.6"
 requests = "^2.31"
 tqdm = "^4.65.0"
 minio = "^7.1.15"
-cachecontrol = "^0.13.0"
+cachecontrol = "^0.13.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
