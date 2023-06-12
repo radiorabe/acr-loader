@@ -3,11 +3,25 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: acr-loader
-  description: Loads data from ACRCloud's broadcast monitoring and stores it in ownCloud.
+  title: ACR Loader
+  description: |
+    Loads data from ACRCloud's broadcat monitoring service and stores it
+    in our ownCloud instance and/or MinIO service. Runs as a cronjob and
+    is scheduled to run once per day.
   annotations:
     backstage.io/techdocs-ref: dir:.
     github.com/project-slug: radiorabe/acr-loader
+  links:
+    - url: https://share.rabe.ch/f/580626
+      title: ownCloud
+    - url: https://minio.service.int.rabe.ch/browser/acrcloud.raw
+      title: MinIO Bucket
 spec:
   type: service
   lifecycle: experimental
   owner: it-reaktion
+  dependsOn:
+    - component:default/python-minimal
+    - component:default/acrclient
+    - component:default/minio
+    - component:default/owncloud
