@@ -22,7 +22,7 @@ cachecontrol = "^0.13.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
-pytest = "^7.3.2"
+pytest = "^7.4.0"
 ruff = "^0.0.275"
 mypy = "^1.4.0"
 types-tqdm = "^4.65.0.1"
