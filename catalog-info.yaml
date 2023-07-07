@@ -22,6 +22,7 @@ spec:
   owner: it-reaktion
   dependsOn:
     - component:default/python-minimal
+    - component:default/s2i-python-minimal
     - component:default/acrclient
     - component:default/minio
     - component:default/owncloud
