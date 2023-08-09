@@ -16,7 +16,7 @@ acrclient = "^0.4.1"
 configargparse = "^1.7"
 pyocclient = "^0.6"
 requests = "^2.31"
-tqdm = "^4.65.0"
+tqdm = "^4.65.2"
 minio = "^7.1.15"
 cachecontrol = "^0.13.1"
 
