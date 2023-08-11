@@ -1340,13 +1340,13 @@ telegram = ["requests"]
 
 [[package]]
 name = "types-tqdm"
-version = "4.65.0.2"
+version = "4.66.0.0"
 description = "Typing stubs for tqdm"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-tqdm-4.65.0.2.tar.gz", hash = "sha256:ad07ee08e758cad04299543b2586ef1d3fd5a10c54271457de13e0cba009cc5d"},
-    {file = "types_tqdm-4.65.0.2-py3-none-any.whl", hash = "sha256:956d92e921651309ffe36a783cc10d41d753f107c84e82d84373c84d68737246"},
+    {file = "types-tqdm-4.66.0.0.tar.gz", hash = "sha256:7a981f281f911cb2f4780ba67e3dd7f15d36f32996a16a56e2834a6f734b7db9"},
+    {file = "types_tqdm-4.66.0.0-py3-none-any.whl", hash = "sha256:be1c0ee809e915fa62af1981923a4ec9b8ccdae6d0e332399bf06bd6c5843d70"},
 ]
 
 [[package]]
@@ -1450,4 +1450,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "1facd05d9566d888f9366e2aeb2943577706d4a5e3882c3f6a618348cbe8c75b"
+content-hash = "bab7d377220268f03a79339e296d8c6f0f11017514e2ccc7baeeac9dbf073738"
