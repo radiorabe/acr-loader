@@ -38,7 +38,7 @@ mkdocstrings = {extras = ["python"], version = "^0.23.0"}
 mkdocs-material = "^9.3.1"
 mkdocs-gen-files = "^0.5.0"
 mkdocs-literate-nav = "^0.6.1"
-mkdocs-section-index = "^0.3.6"
+mkdocs-section-index = "^0.3.7"
 pre-commit = "^3.4.0"
 types-urllib3 = "^1.26.25.14"
 
