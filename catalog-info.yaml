@@ -26,3 +26,5 @@ spec:
     - component:default/acrclient
     - component:default/minio
     - component:default/owncloud
+  consumesApi:
+    - minio-cloudevents-api
