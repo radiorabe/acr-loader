@@ -11,9 +11,7 @@ COPY --from=build /opt/app-root/src/dist/*.whl /tmp/dist/
 
 RUN    microdnf install -y \
          python3.11-pip \
-    && python3.11 -mpip install -U pip # update pip due to module 'tarfile' has no attribute 'LinkOutsideDestinationError' \
     && python3.11 -mpip --no-cache-dir install /tmp/dist/*.whl \
-    && python3.11 -mpip uninstall pip \
     && microdnf remove -y \
          python3.11-pip \
          python3.11-setuptools \
