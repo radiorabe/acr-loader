@@ -21,7 +21,7 @@ minio = "^7.1.17"
 cachecontrol = "^0.13.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.11.0"
+black = "^23.12.1"
 pytest = "^7.4.2"
 ruff = "^0.1.9"
 mypy = "^1.8.0"
