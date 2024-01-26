@@ -1,6 +1,7 @@
 """
 Stores daily data from ACRCloud's broadcast monitoring service in ownCloud.
 """
+
 import json
 import os
 from datetime import datetime, timedelta
