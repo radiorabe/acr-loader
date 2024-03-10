@@ -1,72 +1,77 @@
-"""
-Stores daily data from ACRCloud's broadcast monitoring service in ownCloud.
-"""
+"""Stores daily data from ACRCloud's broadcast monitoring service in ownCloud."""
+
+from __future__ import annotations
 
 import json
-import os
 from datetime import datetime, timedelta
 from functools import cache
 from io import BytesIO
 from logging import getLogger
+from pathlib import Path
+from typing import Any
 
 import urllib3
 from acrclient import Client as ACRClient
 from acrclient.models import GetBmCsProjectsResultsParams
-from configargparse import ArgParser  # type: ignore
-from minio import Minio  # type: ignore
-from minio.error import S3Error  # type: ignore
-from owncloud import Client as OwnCloudClient  # type: ignore
-from owncloud.owncloud import HTTPResponseError as OCResponseError  # type: ignore
+from configargparse import ArgParser  # type: ignore[import-untyped]
+from minio import Minio  # type: ignore[import-untyped]
+from minio.error import S3Error  # type: ignore[import-untyped]
+from owncloud import Client as OwnCloudClient  # type: ignore[import-untyped]
+from owncloud.owncloud import HTTPResponseError  # type: ignore[import-untyped]
+
+# type: ignore[import-untyped]
 from tqdm import tqdm
 
 logger = getLogger(__name__)
 
 
-def daterange(start_date, end_date) -> list[datetime]:
-    dates = []
-    for n in range(int((end_date - start_date).days)):
-        dates.append(start_date + timedelta(n))
-    return dates
+def daterange(start_date: datetime, end_date: datetime) -> list[datetime]:
+    """Get range to load."""
+    return [start_date + timedelta(n) for n in range(int((end_date - start_date).days))]
 
 
 @cache
 def oc_mkdir(oc: OwnCloudClient, path: str) -> bool:
+    """Create a dir on ownCloud."""
     try:
         return oc.mkdir(path)
-    except OCResponseError as ex:  # pragma: no cover
+    except HTTPResponseError as ex:  # pragma: no cover
         if str(ex) != "HTTP error: 405":
-            logger.exception(ex)
+            logger.exception("Failed to mkdir")
         return True
 
 
 @cache
-def oc_file_exists(oc: OwnCloudClient, path: str):
+def oc_file_exists(oc: OwnCloudClient, path: str) -> bool:
+    """Check if file exists on ownCloud."""
     try:
         oc.file_info(path)
-        return True
-    except OCResponseError as ex:
+    except HTTPResponseError as ex:
         if str(ex) != "HTTP error: 404":  # pragma: no cover
-            logger.exception(ex)
+            logger.exception("File missing")
         return False
+    else:
+        return True
 
 
 def oc_check(oc: OwnCloudClient, oc_path: str) -> list[datetime]:
-    """
-    Checks ownCloud for missing files.
-    """
+    """Check ownCloud for missing files."""
     missing = []
-    start = datetime.now() - timedelta(7)
-    for requested in tqdm(daterange(start, datetime.now()), desc="Checking ownCloud"):
+    start = datetime.now() - timedelta(7)  # noqa: DTZ005
+    for requested in tqdm(
+        daterange(start, datetime.now()),  # noqa: DTZ005
+        desc="Checking ownCloud",
+    ):
         oc_mkdir(oc, oc_path)
-        oc_mkdir(oc, os.path.join(oc_path, str(requested.year)))
-        oc_mkdir(oc, os.path.join(oc_path, str(requested.year), str(requested.month)))
+        oc_mkdir(oc, str(Path(oc_path) / str(requested.year)))
+        oc_mkdir(oc, str(Path(oc_path) / str(requested.year) / str(requested.month)))
         status = oc_file_exists(
             oc,
-            os.path.join(
-                oc_path,
-                str(requested.year),
-                str(requested.month),
-                requested.strftime("%Y-%m-%d.json"),
+            str(
+                Path(oc_path)
+                / str(requested.year)
+                / str(requested.month)
+                / requested.strftime("%Y-%m-%d.json"),
             ),
         )
         if not status:
@@ -75,15 +80,16 @@ def oc_check(oc: OwnCloudClient, oc_path: str) -> list[datetime]:
 
 
 def mc_check(mc: Minio, bucket: str) -> list[datetime]:
-    """
-    Checks MinIO for missing files.
-    """
+    """Check MinIO for missing files."""
     missing = []
-    start = datetime.now() - timedelta(7)
-    for requested in tqdm(daterange(start, datetime.now()), desc="Checking MinIO"):
+    start = datetime.now() - timedelta(7)  # noqa: DTZ005
+    for requested in tqdm(
+        daterange(start, datetime.now()),  # noqa: DTZ005
+        desc="Checking MinIO",
+    ):
         try:
             mc.stat_object(bucket, requested.strftime("%Y-%m-%d.json"))
-        except S3Error as ex:
+        except S3Error as ex:  # noqa: PERF203
             if ex.code == "NoSuchKey":
                 missing.append(requested)
     return missing
@@ -95,7 +101,8 @@ def fetch_one(
     acr_project_id: str,
     acr_stream_id: str,
     requested: str,
-):
+) -> Any:  # noqa: ANN401
+    """Fetch one "day" from ACRCloud."""
     return acr.get_bm_cs_projects_results(
         project_id=int(acr_project_id),
         stream_id=acr_stream_id,
@@ -109,21 +116,21 @@ def fetch_one(
     )
 
 
-def oc_fetch(
+def oc_fetch(  # noqa: PLR0913
     missing: list[datetime],
     acr: ACRClient,
     oc: OwnCloudClient,
     acr_project_id: str,
     acr_stream_id: str,
     oc_path: str,
-):
-    """Fetches missing data from ACRCloud and stores it in ownCloud."""
+) -> None:
+    """Fetch missing data from ACRCloud and stores it in ownCloud."""
     for requested in tqdm(missing, desc="Loading into ownCloud from ACRCloud"):
-        target = os.path.join(
-            oc_path,
-            str(requested.year),
-            str(requested.month),
-            requested.strftime("%Y-%m-%d.json"),
+        target = str(
+            Path(oc_path)
+            / str(requested.year)
+            / str(requested.month)
+            / requested.strftime("%Y-%m-%d.json"),
         )
         oc.put_file_contents(
             target,
@@ -133,20 +140,20 @@ def oc_fetch(
                     acr_project_id=acr_project_id,
                     acr_stream_id=acr_stream_id,
                     requested=requested.strftime("%Y%m%d"),
-                )
+                ),
             ),
         )
 
 
-def mc_fetch(
+def mc_fetch(  # noqa: PLR0913
     missing: list[datetime],
     acr: ACRClient,
     mc: Minio,
     acr_project_id: str,
     acr_stream_id: str,
     bucket: str,
-):
-    """Fetches missing data from ACRCloud and stores it in MinIO."""
+) -> None:
+    """Fetch missing data from ACRCloud and stores it in MinIO."""
     for requested in tqdm(missing, desc="Loading into MinIO from ACRCloud"):
         _as_bytes = json.dumps(
             fetch_one(
@@ -154,7 +161,7 @@ def mc_fetch(
                 acr_project_id=acr_project_id,
                 acr_stream_id=acr_stream_id,
                 requested=requested.strftime("%Y%m%d"),
-            )
+            ),
         ).encode("utf-8")
         mc.put_object(
             bucket,
@@ -165,7 +172,8 @@ def mc_fetch(
         )
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
+    """Fetch data from ACRCloud and stores it on-premise."""
     p = ArgParser(
         description=__doc__,
         default_config_files=[
@@ -307,7 +315,8 @@ def main():  # pragma: no cover
             options.minio_secret_key,
             secure=options.minio_secure,
             http_client=urllib3.PoolManager(
-                cert_reqs=options.minio_cert_reqs, ca_certs=options.minio_ca_certs
+                cert_reqs=options.minio_cert_reqs,
+                ca_certs=options.minio_ca_certs,
             ),
         )
         if not mc.bucket_exists(options.minio_bucket):

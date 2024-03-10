@@ -1,16 +1,14 @@
 from datetime import datetime
 from unittest.mock import ANY, call, patch
 
-from minio.error import S3Error  # type: ignore
-
-# from owncloud import Client as OwnCloudClient
-from owncloud.owncloud import HTTPResponseError as OCResponseError  # type: ignore
-from pytest import mark
+import pytest
+from minio.error import S3Error  # type: ignore[import-untyped]
+from owncloud.owncloud import HTTPResponseError  # type: ignore[import-untyped]
 
 import main
 
 
-@mark.freeze_time("2023-01-08")
+@pytest.mark.freeze_time("2023-01-08")
 @patch("owncloud.Client")
 def test_oc_check_files_exist(oc_client):
     oc = oc_client()
@@ -24,26 +22,26 @@ def test_oc_check_files_exist(oc_client):
     oc.mkdir.assert_has_calls(mkdir_calls)
 
     oc.file_info.assert_has_calls(
-        [call(f"/tmp/test/2023/1/2023-01-0{x}.json") for x in range(1, 8)]
+        [call(f"/tmp/test/2023/1/2023-01-0{x}.json") for x in range(1, 8)],
     )
     assert missing == []
 
 
-@mark.freeze_time("2023-01-08")
+@pytest.mark.freeze_time("2023-01-08")
 @patch("owncloud.Client")
 def test_oc_check_files_missing(oc_client):
     oc = oc_client()
-    oc.file_info.side_effect = OCResponseError(
-        type("", (object,), {"status_code": 404})()
+    oc.file_info.side_effect = HTTPResponseError(
+        type("", (object,), {"status_code": 404})(),
     )
     missing = main.oc_check(oc=oc, oc_path="/tmp/test")
     oc.file_info.assert_has_calls(
-        [call(f"/tmp/test/2023/1/2023-01-0{x}.json") for x in range(1, 8)]
+        [call(f"/tmp/test/2023/1/2023-01-0{x}.json") for x in range(1, 8)],
     )
-    assert len(missing) == 7
+    assert len(missing) == 7  # noqa: PLR2004
 
 
-@mark.freeze_time("2023-01-08")
+@pytest.mark.freeze_time("2023-01-08")
 @patch("acrclient.Client")
 @patch("owncloud.Client")
 def test_oc_fetch(oc_client, acr_client):
@@ -61,23 +59,24 @@ def test_oc_fetch(oc_client, acr_client):
         oc_path="/tmp/test",
     )
     oc.put_file_contents.assert_called_with(
-        "/tmp/test/2023/1/2023-01-01.json", '"JSON"'
+        "/tmp/test/2023/1/2023-01-01.json",
+        '"JSON"',
     )
 
 
-@mark.freeze_time("2023-01-08")
+@pytest.mark.freeze_time("2023-01-08")
 @patch("minio.Minio")
 def test_mc_check_files_exist(mc_client):
     mc = mc_client()
     missing = main.mc_check(mc=mc, bucket="acrcloud.raw")
     assert mc_client.called
     mc.stat_object.assert_has_calls(
-        [call("acrcloud.raw", f"2023-01-0{x}.json") for x in range(1, 8)]
+        [call("acrcloud.raw", f"2023-01-0{x}.json") for x in range(1, 8)],
     )
     assert missing == []
 
 
-@mark.freeze_time("2023-01-08")
+@pytest.mark.freeze_time("2023-01-08")
 @patch("minio.Minio")
 def test_mc_check_files_missing(mc_client):
     mc = mc_client()
@@ -92,12 +91,12 @@ def test_mc_check_files_missing(mc_client):
     missing = main.mc_check(mc=mc, bucket="acrcloud.raw")
     assert mc_client.called
     mc.stat_object.assert_has_calls(
-        [call("acrcloud.raw", f"2023-01-0{x}.json") for x in range(1, 8)]
+        [call("acrcloud.raw", f"2023-01-0{x}.json") for x in range(1, 8)],
     )
-    assert len(missing) == 7
+    assert len(missing) == 7  # noqa: PLR2004
 
 
-@mark.freeze_time("2023-01-08")
+@pytest.mark.freeze_time("2023-01-08")
 @patch("acrclient.Client")
 @patch("minio.Minio")
 def test_mc_fetch(mc_client, acr_client):
