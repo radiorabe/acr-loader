@@ -1,10 +1,11 @@
 name: Release
 
 on:
+  pull_request:
   push:
+    branches: [main]
     tags:
       - 'v*.*.*'
-  pull_request:
 
 jobs:
   python-poetry:
