@@ -24,7 +24,7 @@ jobs:
           docker save -o /tmp/acrloader.tar ghcr.io/radiorabe/acrloader:latest
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3.5
+        uses: azure/setup-helm@v4
         with:
           version: v3.12.0
 
