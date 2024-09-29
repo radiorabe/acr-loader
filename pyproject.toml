@@ -17,7 +17,7 @@ configargparse = "^1.7"
 pyocclient = "^0.6"
 requests = "^2.32"
 tqdm = "^4.66.5"
-minio = "^7.2.8"
+minio = "^7.2.9"
 cachecontrol = "^0.14.0"
 
 [tool.poetry.group.dev.dependencies]
