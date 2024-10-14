@@ -33,7 +33,7 @@ requests-mock = "^1.12.1"
 pytest-freezegun = "^0.4.2"
 mkdocs = "^1.6.1"
 mkdocs-autorefs = "^1.1.0"
-mkdocstrings = {extras = ["python"], version = "^0.26.1"}
+mkdocstrings = {extras = ["python"], version = "^0.26.2"}
 mkdocs-material = "^9.5.40"
 mkdocs-gen-files = "^0.5.0"
 mkdocs-literate-nav = "^0.6.1"
