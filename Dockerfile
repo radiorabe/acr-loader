@@ -2,7 +2,7 @@ FROM ghcr.io/radiorabe/s2i-python:3.1.0 AS build
 
 COPY --chown=1001:0 ./ /opt/app-root/src/
 
-RUN    python3.11 -mbuild
+RUN    python3.12 -mbuild
 
 
 FROM ghcr.io/radiorabe/python-minimal:3.1.0 AS app
