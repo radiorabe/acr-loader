@@ -18,7 +18,7 @@ pyocclient = "^0.6"
 requests = "^2.32"
 tqdm = "^4.67.1"
 minio = "^7.2.13"
-cachecontrol = "^0.14.1"
+cachecontrol = "^0.14.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
