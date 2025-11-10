@@ -41,9 +41,9 @@ mkdocs-section-index = "^0.3.10"
 pre-commit = "^4.3.0"
 types-urllib3 = "^1.26.25.14"
 
-[tool.pytest.ini_options]
-minversion = "7.2"
-addopts = "-ra -q --random-order --doctest-glob='*.md' --doctest-modules --ignore=docs/ --cov=main --cov-fail-under=100 --ruff --mypy"
+[tool.pytest]
+minversion = "9.0"
+addopts = ["-ra", "-q", "--random-order", "--doctest-glob='*.md'", "--doctest-modules", "--ignore=docs/", "--cov=main", "--cov-fail-under=100", "--ruff" "--mypy"]
 filterwarnings = ["ignore::DeprecationWarning:pytest_freezegun"]
 
 [build-system]
