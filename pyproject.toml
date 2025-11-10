@@ -21,7 +21,7 @@ minio = "^7.2.18"
 cachecontrol = "^0.14.3"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.4.2"
+pytest = "^9.0.0"
 ruff = "^0.14.4"
 mypy = "^1.18.1"
 types-tqdm = "^4.67.0.20250809"
@@ -41,9 +41,9 @@ mkdocs-section-index = "^0.3.10"
 pre-commit = "^4.3.0"
 types-urllib3 = "^1.26.25.14"
 
-[tool.pytest.ini_options]
-minversion = "7.2"
-addopts = "-ra -q --random-order --doctest-glob='*.md' --doctest-modules --ignore=docs/ --cov=main --cov-fail-under=100 --ruff --mypy"
+[tool.pytest]
+minversion = "9.0"
+addopts = ["-ra", "-q", "--random-order", "--doctest-glob='*.md'", "--doctest-modules", "--ignore=docs/", "--cov=main", "--cov-fail-under=100", "--ruff", "--mypy"]
 filterwarnings = ["ignore::DeprecationWarning:pytest_freezegun"]
 
 [build-system]
