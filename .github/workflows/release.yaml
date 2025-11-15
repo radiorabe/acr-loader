@@ -13,7 +13,7 @@ jobs:
     secrets:
       RABE_PYPI_TOKEN: ${{ secrets.RABE_PYPI_TOKEN }}
   release-container:
-    uses: radiorabe/actions/.github/workflows/release-container.yaml@v0.37.0
+    uses: radiorabe/actions/.github/workflows/release-container.yaml@v0.38.0
     needs:
       - python-poetry
     with:
