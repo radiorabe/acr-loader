@@ -22,7 +22,7 @@ cachecontrol = "^0.14.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.1"
-ruff = "^0.14.6"
+ruff = "^0.14.7"
 mypy = "^1.19.0"
 types-tqdm = "^4.67.0.20250809"
 pytest-random-order = "^1.2.0"
