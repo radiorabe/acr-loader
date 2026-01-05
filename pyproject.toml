@@ -12,7 +12,7 @@ acrloader = 'main:main'
 
 [tool.poetry.dependencies]
 python = "^3.11"
-acrclient = "^0.5.1"
+acrclient = "^0.5.2"
 configargparse = "^1.7"
 pyocclient = "^0.6"
 requests = "^2.32"
