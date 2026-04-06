@@ -9,11 +9,11 @@ on:
 
 jobs:
   python-poetry:
-    uses: radiorabe/actions/.github/workflows/release-python-poetry.yaml@c7aef9928f610ec51b44f84debf2321189276d54 # v0.41.3
+    uses: radiorabe/actions/.github/workflows/release-python-poetry.yaml@479996126a091287dc3fd349786f6f8a6dd1b23c # v0.42.0
     secrets:
       RABE_PYPI_TOKEN: ${{ secrets.RABE_PYPI_TOKEN }}
   release-container:
-    uses: radiorabe/actions/.github/workflows/release-container.yaml@c7aef9928f610ec51b44f84debf2321189276d54 # v0.41.3
+    uses: radiorabe/actions/.github/workflows/release-container.yaml@479996126a091287dc3fd349786f6f8a6dd1b23c # v0.42.0
     needs:
       - python-poetry
     with:
@@ -47,7 +47,7 @@ jobs:
         run: echo version=${GITHUB_REF#refs/tags/v} >> $GITHUB_OUTPUT
 
       - name: Set up Helm
-        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
         with:
           version: v3.12.0
 
