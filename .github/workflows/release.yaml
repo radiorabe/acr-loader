@@ -9,11 +9,11 @@ on:
 
 jobs:
   python-poetry:
-    uses: radiorabe/actions/.github/workflows/release-python-poetry.yaml@5dafb461cea1f8b296d89297dc6de7bd0891f0d2 # v0.44.2
+    uses: radiorabe/actions/.github/workflows/release-python-poetry.yaml@953c51da7e4c2c681f15c70513cb803c8fa461cc # v0.44.3
     secrets:
       RABE_PYPI_TOKEN: ${{ secrets.RABE_PYPI_TOKEN }}
   release-container:
-    uses: radiorabe/actions/.github/workflows/release-container.yaml@5dafb461cea1f8b296d89297dc6de7bd0891f0d2 # v0.44.2
+    uses: radiorabe/actions/.github/workflows/release-container.yaml@953c51da7e4c2c681f15c70513cb803c8fa461cc # v0.44.3
     needs:
       - python-poetry
     with:
@@ -55,7 +55,7 @@ jobs:
         run: helm package --version ${{ steps.meta.outputs.version }} --app-version ${{ steps.meta.outputs.version }} --destination=dist charts/acrloader
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        uses: docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c # v4.5.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
