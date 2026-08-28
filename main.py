@@ -116,7 +116,7 @@ def fetch_one(
     )
 
 
-def oc_fetch(  # noqa: PLR0913
+def oc_fetch(  # noqa: PLR0913,PLR0917
     missing: list[datetime],
     acr: ACRClient,
     oc: OwnCloudClient,
@@ -145,7 +145,7 @@ def oc_fetch(  # noqa: PLR0913
         )
 
 
-def mc_fetch(  # noqa: PLR0913
+def mc_fetch(  # noqa: PLR0913,PLR0917
     missing: list[datetime],
     acr: ACRClient,
     mc: Minio,
